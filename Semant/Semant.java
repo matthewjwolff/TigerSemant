@@ -53,9 +53,35 @@ public class Semant {
       result = transExp((Absyn.OpExp)e);
     else if (e instanceof Absyn.LetExp)
       result = transExp((Absyn.LetExp)e);
+    else if (e instanceof Absyn.IfExp)
+      result = transExp((Absyn.IfExp)e);
+    else if (e instanceof Absyn.IntExp)
+      result = new ExpTy(null, INT);
+    else if (e instanceof Absyn.StringExp)
+      result = new ExpTy(null, STRING);
+    else if (e instanceof Absyn.NilExp)
+      result = new ExpTy(null, NIL);
     else throw new Error("Semant.transExp");
     e.type = result.ty;
     return result;
+  }
+
+  ExpTy transExp(Absyn.IfExp e) {
+    ExpTy test = transExp(e.test);
+    //check for int
+    checkInt(test, e.test.pos);
+    //the test is an integer, get type of then clause
+    ExpTy then = transExp(e.thenclause);
+    //check if we have an else clause
+    if(e.elseclause != null) {
+      ExpTy els = transExp(e.elseclause);
+      //need to be same type
+      if(!(els.ty.coerceTo(then.ty)))
+        error(e.thenclause.pos, "then/else clause must be same type");
+    }
+
+    //TODO: Might need to determine type based on whether or not else clause is present
+    return then;
   }
 
   ExpTy transExp(Absyn.OpExp e) {
