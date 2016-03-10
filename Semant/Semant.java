@@ -30,6 +30,20 @@ public class Semant {
     return et.exp;
   }
 
+  private Exp checkComparable(ExpTy et, int pos) {
+    if(!(INT.coerceTo(et.ty) || STRING.coerceTo(et.ty)))
+      error(pos, "integer or string required");
+    return et.exp;
+  }
+
+  private Exp checkEquable(ExpTy et, int pos) {
+    //need to avoid making a record/array
+    Type type = et.ty.actual();
+    if(!(type instanceof Types.INT || type instanceof Types.STRING || type instanceof Types.RECORD || type instanceof Types.ARRAY))
+      error(pos, "integer, string, record, or array required");
+    return et.exp;
+  }
+
   ExpTy transExp(Absyn.Exp e) {
     ExpTy result;
 
@@ -52,6 +66,30 @@ public class Semant {
     case Absyn.OpExp.PLUS:
       checkInt(left, e.left.pos);
       checkInt(right, e.right.pos);
+      return new ExpTy(null, INT);
+    case Absyn.OpExp.MINUS:
+      checkInt(left, e.left.pos);
+      checkInt(right, e.right.pos);
+      return new ExpTy(null, INT);
+    case Absyn.OpExp.MUL:
+      checkInt(left, e.left.pos);
+      checkInt(right, e.right.pos);
+      return new ExpTy(null, INT);
+    case Absyn.OpExp.DIV:
+      checkInt(left, e.left.pos);
+      checkInt(right, e.right.pos);
+      return new ExpTy(null, INT);
+    case Absyn.OpExp.GT:
+    case Absyn.OpExp.LT:
+    case Absyn.OpExp.GE:
+    case Absyn.OpExp.LE:
+      checkComparable(left, e.left.pos);
+      checkComparable(right, e.right.pos);
+      return new ExpTy(null, INT);
+    case Absyn.OpExp.EQ:
+    case Absyn.OpExp.NE:
+      checkEquable(left, e.left.pos);
+      checkEquable(left, e.left.pos);
       return new ExpTy(null, INT);
     default:
       throw new Error("unknown operator");
@@ -92,4 +130,3 @@ public class Semant {
     return null;
   }
 }
-
