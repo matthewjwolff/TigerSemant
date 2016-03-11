@@ -170,7 +170,6 @@ public class Semant {
   }
 
   Exp transDec(Absyn.TypeDec d) {
-    System.out.println(d.ty.getClass().getName());
     //Make a NAME for this type
     Types.NAME name = new Types.NAME(d.name);
     //Bind the name to the type that is declared
@@ -178,7 +177,8 @@ public class Semant {
     d.entry = name;
     //TODO: ERROR
     env.tenv.put(d.name, name);
-    //TOOD: go down the TypeDec list....
+    if(d.next != null)
+      transDec(d.next);
     return null;
   }
 
@@ -188,7 +188,19 @@ public class Semant {
       return transTy((Absyn.RecordTy) t);
     if(t instanceof Absyn.ArrayTy)
       return transTy((Absyn.ArrayTy) t);
+    if(t instanceof Absyn.NameTy)
+      return transTy((Absyn.NameTy) t);
     throw new Error("Failed for "+t.getClass().getName());
+  }
+  
+  Types.NAME transTy(Absyn.NameTy t) {
+      //theoretically should be a name
+      Types.NAME type = (Types.NAME)env.tenv.get(t.name);
+      //if null, report error
+      if(type==null) {
+          error(t.pos, "type "+t.name+" is not known");
+      }
+      return type;
   }
 
   Types.ARRAY transTy(Absyn.ArrayTy t) {
