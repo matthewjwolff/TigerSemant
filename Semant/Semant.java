@@ -43,6 +43,11 @@ public class Semant {
       error(pos, "integer, string, record, or array required");
     return et.exp;
   }
+  
+  private void checkIdentical(ExpTy first, ExpTy second, int pos) {
+    if(!first.ty.actual().coerceTo(second.ty.actual()))
+      error(pos, "incompatible operands to inequality operator");
+  }
 
   ExpTy transExp(Absyn.Exp e) {
     ExpTy result;
@@ -236,11 +241,13 @@ public class Semant {
     case Absyn.OpExp.LE:
       checkComparable(left, e.left.pos);
       checkComparable(right, e.right.pos);
+      checkIdentical(left, right, e.pos);
       return new ExpTy(null, INT);
     case Absyn.OpExp.EQ:
     case Absyn.OpExp.NE:
       checkEquable(left, e.left.pos);
       checkEquable(left, e.left.pos);
+      checkIdentical(left, right, e.pos);
       return new ExpTy(null, INT);
     default:
       throw new Error("unknown operator");
