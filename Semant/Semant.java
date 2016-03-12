@@ -65,11 +65,48 @@ public class Semant {
       result = transExp((Absyn.ArrayExp)e);
     else if (e instanceof Absyn.VarExp)
       result = transExp((Absyn.VarExp)e);
+    else if (e instanceof Absyn.RecordExp)
+      result = transExp((Absyn.RecordExp)e);
+    else if (e instanceof Absyn.SeqExp)
+      result = transExp((Absyn.SeqExp)e);
+    else if (e instanceof Absyn.AssignExp)
+      result = transExp((Absyn.AssignExp)e);
     else throw new Error("Failed for "+e.getClass().getName());
     e.type = result.ty;
     return result;
   }
 
+  ExpTy transExp(Absyn.AssignExp e) {
+    transExp(e.exp);
+    return new ExpTy(null, VOID);
+  }
+  
+  ExpTy transExp(Absyn.RecordExp e) {
+    Types.NAME lookup = (Types.NAME)env.tenv.get(e.typ);
+    //transexp through all the initializations of the record
+    transField(e.fields);
+    return new ExpTy(null, lookup);
+  }
+  
+  //recursively visit nodes in list
+  //TODO: actually typecheck
+  void transField(Absyn.FieldExpList fe) {
+      if(fe==null) return;
+      transExp(fe.init);
+      transField(fe.tail);
+  }
+  
+  ExpTy transExp(Absyn.SeqExp e) {
+    //returns the type of the last expression in the list
+    return transExpList(e.list);
+  }
+  
+  ExpTy transExpList(Absyn.ExpList el) {
+    ExpTy headType = transExp(el.head);
+    if(el.tail==null) return headType;
+    else return transExpList(el.tail);
+  }
+  
   ExpTy transExp(Absyn.ArrayExp e) {
     //extract and typecheck the array information
     Types.NAME type = (Types.NAME)env.tenv.get(e.typ);
@@ -215,7 +252,20 @@ public class Semant {
   }
 
   Types.RECORD transTy(Absyn.RecordTy t) {
-    throw new Error("Semant.transTy for records unimplemented");
+    //recursviely make records
+    return makeRecord(t.fields);
+  }
+  
+  //helper function to make record type out of fields
+  Types.RECORD makeRecord(Absyn.FieldList fl) {
+      if(fl==null)
+          return null;
+      Symbol.Symbol fieldName = fl.name;
+      Symbol.Symbol fieldType = fl.typ;
+      Types.Type type = (Types.Type)env.tenv.get(fieldType);
+      if(type==null)
+          error(fl.pos, "record type "+fieldType+"unrecognized");
+      return new Types.RECORD(fieldName, type, makeRecord(fl.tail));
   }
 
   Exp transDec(Absyn.VarDec d) {
