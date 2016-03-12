@@ -81,6 +81,11 @@ public class Semant {
   ExpTy transExp(Absyn.CallExp e) {
     //TODO: typecheck everything
     FunEntry function = (FunEntry)env.venv.get(e.func);
+    //If the function isn't known, we've got a problem
+    if(function==null) {
+        error(e.pos, "function "+e.func+" unknown");
+        return new ExpTy(null, VOID);
+    }
     //Traverse callExp's parameters, still need to compare to function entry's types
     Absyn.ExpList list = e.args;
     while(list!=null) {
@@ -224,7 +229,8 @@ public class Semant {
   
   Exp transDec(Absyn.FunctionDec d) {
     //Make an entry for the function, needs parameters and a result
-    //TODO: recursive types, better do error checking now for this one
+    //TODO: recursive types
+    //TODO: error checking
     Types.RECORD formals = makeRecord(d.params);
     //if return type is non-null, translate it
     Types.Type returnType = VOID;
@@ -232,7 +238,9 @@ public class Semant {
         returnType = transTy(d.result);
     d.entry = new FunEntry(formals, returnType);
     env.venv.put(d.name, d.entry);
-    //Todo, functiondec recursion
+    //go through the chain of function declarations here, put the names in the environment before parsing the body (for recursion)
+    if(d.next!=null)
+      transDec(d.next);
     //inside the body, create a new environment
     env.venv.beginScope();
     //add parameters to this scope
