@@ -153,14 +153,18 @@ public class Semant {
   }
   
   ExpTy transExp(Absyn.SeqExp e) {
+    //if this is an empty seqexp, return void type
+    if(e.list == null)
+      return new ExpTy(null,VOID);
     //returns the type of the last expression in the list
     return transExpList(e.list);
   }
   
   ExpTy transExpList(Absyn.ExpList el) {
     ExpTy headType = transExp(el.head);
-    if(el.tail==null) return headType;
-    else return transExpList(el.tail);
+    if(el.tail==null) 
+      return headType;
+    return transExpList(el.tail);
   }
   
   ExpTy transExp(Absyn.ArrayExp e) {
