@@ -73,9 +73,23 @@ public class Semant {
       result = transExp((Absyn.AssignExp)e);
     else if (e instanceof Absyn.CallExp)
       result = transExp((Absyn.CallExp)e);
+    else if (e instanceof Absyn.WhileExp)
+      result = transExp((Absyn.WhileExp)e);
     else throw new Error("Failed for "+e.getClass().getName());
     e.type = result.ty;
     return result;
+  }
+  
+  ExpTy transExp(Absyn.WhileExp e) {
+    ExpTy test = transExp(e.test);
+    if(!test.ty.coerceTo(INT)) {
+      error(e.pos, "test must be int type");
+      return null;
+    }
+    ExpTy body = transExp(e.body);
+    if(!test.ty.coerceTo(VOID))
+      error(e.body.pos, "result type mismatch");
+    return new ExpTy(null, VOID);
   }
   
   ExpTy transExp(Absyn.CallExp e) {
