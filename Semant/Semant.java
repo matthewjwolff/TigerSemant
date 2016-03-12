@@ -134,12 +134,19 @@ public class Semant {
         error(e.pos, "undeclared function: "+e.func);
         return new ExpTy(null, VOID);
     }
-    //Traverse callExp's parameters, still need to compare to function entry's types
-    Absyn.ExpList list = e.args;
-    while(list!=null) {
-      transExp(list.head);
-      list = list.tail;
+    //Traverse callExp's parameters, typecheck them against the function's parameters
+    Absyn.ExpList callList = e.args;
+    Types.RECORD paramList = function.formals;
+    while(callList!=null && paramList!=null) {
+      ExpTy callType = transExp(callList.head);
+      Types.NAME paramType = (Types.NAME)paramList.fieldType;
+      if(!callType.ty.actual().coerceTo(paramType.actual()))
+          error(callList.head.pos, "argument type mismatch");
+      paramList = paramList.tail;
+      callList = callList.tail;
     }
+    if(callList!=null || paramList!=null)
+      error(e.pos, "argument number mismatch");
     return new ExpTy(null, function.result);
   }
 
@@ -195,6 +202,11 @@ public class Semant {
     //REMEMBER: Entries are put into the venv
     if(var instanceof Absyn.SimpleVar) {
         entry = (Entry)env.venv.get(((Absyn.SimpleVar)var).name);
+        if(entry == null) {
+          error(e.pos, "undeclared variable: "+((Absyn.SimpleVar) var).name);
+          //return something...
+          return new ExpTy(null, VOID);
+        }
         return new ExpTy(null, ((VarEntry)entry).ty);
     } else { 
         throw new Error("varExp "+var.getClass().getName());
