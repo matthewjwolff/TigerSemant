@@ -75,9 +75,32 @@ public class Semant {
       result = transExp((Absyn.CallExp)e);
     else if (e instanceof Absyn.WhileExp)
       result = transExp((Absyn.WhileExp)e);
+    else if (e instanceof Absyn.ForExp)
+      result = transExp((Absyn.ForExp)e);
     else throw new Error("Failed for "+e.getClass().getName());
     e.type = result.ty;
     return result;
+  }
+  
+  ExpTy transExp(Absyn.ForExp e) {
+    //TODO: figure out how to detect for iterator assignment
+    ExpTy init = transExp(e.var.init);
+    ExpTy hi = transExp(e.hi);
+    //both must be integers
+    if(!init.ty.coerceTo(INT))
+      error(e.var.pos, "integer required");
+    if(!hi.ty.coerceTo(INT))
+      error(e.hi.pos, "integer required");
+    //begin scope in which iterator is defined
+    env.venv.beginScope();
+    //set up the variable in that scope
+    transDec(e.var);
+    //traverse the body
+    ExpTy body = transExp(e.body);
+    //result must be void
+    if(!body.ty.coerceTo(VOID))
+      error(e.body.pos, "body must be void type");
+    return new ExpTy(null,VOID);
   }
   
   ExpTy transExp(Absyn.WhileExp e) {
