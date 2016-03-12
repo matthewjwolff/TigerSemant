@@ -251,13 +251,17 @@ public class Semant {
   Exp transDec(Absyn.TypeDec d) {
     //Make a NAME for this type
     Types.NAME name = new Types.NAME(d.name);
-    //Bind the name to the type that is declared
-    name.bind(transTy(d.ty));
-    d.entry = name;
-    //TODO: ERROR
+    //first, define the name in the environment (handles recursive types)
     env.tenv.put(d.name, name);
+    d.entry = name;
+    //Go through the names of the types in the typedec chain before processing the types (to handle for recursive types)
     if(d.next != null)
       transDec(d.next);
+    //now we can typecheck the body (don't bind it yet, probably have to go through rest of typedec chain first...
+    Types.RECORD bodyType = (Types.RECORD)transTy(d.ty);
+    //Bind the name to the type that is declared
+    name.bind(bodyType);
+    //TODO: ERROR
     return null;
   }
 
