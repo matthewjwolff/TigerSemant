@@ -131,7 +131,7 @@ public class Semant {
     FunEntry function = (FunEntry)env.venv.get(e.func);
     //If the function isn't known, we've got a problem
     if(function==null) {
-        error(e.pos, "function "+e.func+" unknown");
+        error(e.pos, "undeclared function: "+e.func);
         return new ExpTy(null, VOID);
     }
     //Traverse callExp's parameters, still need to compare to function entry's types
@@ -287,7 +287,6 @@ public class Semant {
   
   Exp transDec(Absyn.FunctionDec d) {
     //Make an entry for the function, needs parameters and a result
-    //TODO: recursive types
     //TODO: error checking
     Types.RECORD formals = makeRecord(d.params);
     //if return type is non-null, translate it
@@ -376,7 +375,7 @@ public class Semant {
       Symbol.Symbol fieldType = fl.typ;
       Types.NAME type = (Types.NAME)env.tenv.get(fieldType);
       if(type==null)
-          error(fl.pos, "record type "+fieldType+"unrecognized");
+          error(fl.pos, "undeclared type: "+fieldType);
       return new Types.RECORD(fieldName, type, makeRecord(fl.tail));
   }
 
