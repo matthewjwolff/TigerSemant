@@ -71,9 +71,23 @@ public class Semant {
       result = transExp((Absyn.SeqExp)e);
     else if (e instanceof Absyn.AssignExp)
       result = transExp((Absyn.AssignExp)e);
+    else if (e instanceof Absyn.CallExp)
+      result = transExp((Absyn.CallExp)e);
     else throw new Error("Failed for "+e.getClass().getName());
     e.type = result.ty;
     return result;
+  }
+  
+  ExpTy transExp(Absyn.CallExp e) {
+    //TODO: typecheck everything
+    FunEntry function = (FunEntry)env.venv.get(e.func);
+    //Traverse callExp's parameters, still need to compare to function entry's types
+    Absyn.ExpList list = e.args;
+    while(list!=null) {
+      transExp(list.head);
+      list = list.tail;
+    }
+    return new ExpTy(null, function.result);
   }
 
   ExpTy transExp(Absyn.AssignExp e) {
@@ -203,7 +217,35 @@ public class Semant {
       return transDec((Absyn.VarDec)d);
     if (d instanceof Absyn.TypeDec)
       return transDec((Absyn.TypeDec)d);
+    if (d instanceof Absyn.FunctionDec)
+      return transDec((Absyn.FunctionDec)d);
     throw new Error("Failed for "+d.getClass().getName());
+  }
+  
+  Exp transDec(Absyn.FunctionDec d) {
+    //Make an entry for the function, needs parameters and a result
+    //TODO: recursive types, better do error checking now for this one
+    Types.RECORD formals = makeRecord(d.params);
+    //if return type is non-null, translate it
+    Types.Type returnType = VOID;
+    if(d.result != null)
+        returnType = transTy(d.result);
+    d.entry = new FunEntry(formals, returnType);
+    env.venv.put(d.name, d.entry);
+    //Todo, functiondec recursion
+    //inside the body, create a new environment
+    env.venv.beginScope();
+    //add parameters to this scope
+    while(formals!=null) {
+      env.venv.put(formals.fieldName, new VarEntry(formals.fieldType));
+      formals = formals.tail;
+    }
+    //traverse the function body
+    ExpTy resultType = transExp(d.body);
+    //TODO: typecheck declared return type and actual return type
+    //end scope
+    env.venv.endScope();
+    return null;
   }
 
   Exp transDec(Absyn.TypeDec d) {
@@ -262,7 +304,7 @@ public class Semant {
           return null;
       Symbol.Symbol fieldName = fl.name;
       Symbol.Symbol fieldType = fl.typ;
-      Types.Type type = (Types.Type)env.tenv.get(fieldType);
+      Types.NAME type = (Types.NAME)env.tenv.get(fieldType);
       if(type==null)
           error(fl.pos, "record type "+fieldType+"unrecognized");
       return new Types.RECORD(fieldName, type, makeRecord(fl.tail));
