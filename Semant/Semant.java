@@ -160,10 +160,11 @@ public class Semant {
       ExpTy els = transExp(e.elseclause);
       //need to be same type
       if(!(els.ty.coerceTo(then.ty)))
-        error(e.thenclause.pos, "then/else clause must be same type");
+        error(e.pos, "result type mismatch");
+      return els;
     }
-
-    //TODO: Might need to determine type based on whether or not else clause is present
+    if(then.ty!=VOID)
+      error(e.thenclause.pos, "if-then must be void");
     return then;
   }
 
