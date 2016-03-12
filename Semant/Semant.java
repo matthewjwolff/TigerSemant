@@ -48,6 +48,12 @@ public class Semant {
     if(!first.ty.actual().coerceTo(second.ty.actual()))
       error(pos, "incompatible operands to inequality operator");
   }
+  
+  //same thing as above method, but different error message
+  private void checkIdenticalE(ExpTy first, ExpTy second, int pos) {
+      if(!first.ty.actual().coerceTo(second.ty.actual()))
+      error(pos, "incompatible operands to equality operator");
+  }
 
   ExpTy transExp(Absyn.Exp e) {
     ExpTy result;
@@ -209,8 +215,11 @@ public class Semant {
         error(e.pos, "result type mismatch");
       return els;
     }
-    if(then.ty!=VOID)
-      error(e.thenclause.pos, "if-then must be void");
+    if(then.ty!=VOID) {
+      error(e.pos, "result type mismatch");
+      //returning proper type
+      return new ExpTy(null, VOID);
+    }
     return then;
   }
 
@@ -247,7 +256,7 @@ public class Semant {
     case Absyn.OpExp.NE:
       checkEquable(left, e.left.pos);
       checkEquable(left, e.left.pos);
-      checkIdentical(left, right, e.pos);
+      checkIdenticalE(left, right, e.pos);
       return new ExpTy(null, INT);
     default:
       throw new Error("unknown operator");
@@ -314,8 +323,8 @@ public class Semant {
     //Go through the names of the types in the typedec chain before processing the types (to handle for recursive types)
     if(d.next != null)
       transDec(d.next);
-    //now we can typecheck the body (don't bind it yet, probably have to go through rest of typedec chain first...
-    Types.RECORD bodyType = (Types.RECORD)transTy(d.ty);
+    //typecheck the body, not necessarily a record
+    Types.Type bodyType = transTy(d.ty);
     //Bind the name to the type that is declared
     name.bind(bodyType);
     //TODO: ERROR
