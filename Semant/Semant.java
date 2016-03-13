@@ -160,6 +160,10 @@ public class Semant {
   
   ExpTy transExp(Absyn.RecordExp e) {
     Types.NAME lookup = (Types.NAME)env.tenv.get(e.typ);
+    if(lookup==null) {
+        error(e.pos, "undeclared type: "+e.typ);
+        return new ExpTy(null, VOID);
+    }
     //transexp through all the initializations of the record
     transField(e.fields);
     return new ExpTy(null, lookup);
