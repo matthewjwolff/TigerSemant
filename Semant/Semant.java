@@ -51,6 +51,11 @@ public class Semant {
   
   //same thing as above method, but different error message
   private void checkIdenticalE(ExpTy first, ExpTy second, int pos) {
+      //it's ok if one's a record and the other is nil
+      if(first.ty == NIL || second.ty == NIL) {
+          if((first.ty.actual() instanceof Types.RECORD) || (second.ty.actual() instanceof Types.RECORD))
+              return;
+      }
       if(!first.ty.actual().coerceTo(second.ty.actual()))
       error(pos, "incompatible operands to equality operator");
   }
