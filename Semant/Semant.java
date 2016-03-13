@@ -148,7 +148,7 @@ public class Semant {
     if(paramList!=null)
       error(e.pos, "missing argument for "+paramList.fieldName);
     if(callList!=null)
-      error(e.pos, "too many parameters");
+      error(callList.head.pos, "too many arguments");
     return new ExpTy(null, function.result);
   }
 
