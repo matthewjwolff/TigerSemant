@@ -198,12 +198,8 @@ public class Semant {
   }
 
   ExpTy transExp(Absyn.VarExp e) {
-    //Likely will have to split into overloaded methods?
-    Absyn.Var var = e.var;
-    Types.NAME type;
-    Entry entry;
-    //REMEMBER: Entries are put into the venv
-    return transVar(var);
+    //probably needs more stuff here...?
+    return transVar(e.var);
   }
   
   //uh i guess time to add all these in
@@ -220,13 +216,13 @@ public class Semant {
   ExpTy transVar(Absyn.SubscriptVar v) {
     ExpTy var = transVar(v.var);
     ExpTy index = transExp(v.index);
-    if(!(var.ty instanceof Types.ARRAY)) {
+    if(!(var.ty.actual() instanceof Types.ARRAY)) {
         error(v.pos, "array required");
         return new ExpTy(null, VOID);
     }
     if(!index.ty.actual().coerceTo(INT))
         error(v.pos, "index not integer");
-    return new ExpTy(null, ((Types.ARRAY)var.ty).element.actual());
+    return new ExpTy(null, ((Types.ARRAY)var.ty.actual()).element);
   }
   
   ExpTy transVar(Absyn.FieldVar v) {
@@ -452,7 +448,7 @@ public class Semant {
       return null;
     }
     if(!varType.actual().coerceTo(init.ty)) {
-      error(d.pos, "assignment Type mismatch");
+      error(d.pos, "assignment type mismatch");
     }
     d.entry = new VarEntry(varType);
     env.venv.put(d.name, d.entry);
