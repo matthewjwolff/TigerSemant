@@ -212,7 +212,21 @@ public class Semant {
       return transVar((Absyn.SimpleVar)v);
     if(v instanceof Absyn.FieldVar)
       return transVar((Absyn.FieldVar)v);
+    if(v instanceof Absyn.SubscriptVar)
+      return transVar((Absyn.SubscriptVar)v);
     else throw new Error("Failed for "+v.getClass().getName());
+  }
+  
+  ExpTy transVar(Absyn.SubscriptVar v) {
+    ExpTy var = transVar(v.var);
+    ExpTy index = transExp(v.index);
+    if(!(var.ty instanceof Types.ARRAY)) {
+        error(v.pos, "array required");
+        return new ExpTy(null, VOID);
+    }
+    if(!index.ty.actual().coerceTo(INT))
+        error(v.pos, "index not integer");
+    return new ExpTy(null, ((Types.ARRAY)var.ty).element.actual());
   }
   
   ExpTy transVar(Absyn.FieldVar v) {
