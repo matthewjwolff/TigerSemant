@@ -151,7 +151,10 @@ public class Semant {
   }
 
   ExpTy transExp(Absyn.AssignExp e) {
-    transExp(e.exp);
+    ExpTy rValue = transExp(e.exp);
+    ExpTy lValue = transVar(e.var);
+    if(!rValue.ty.coerceTo(lValue.ty))
+      error(e.pos, "assignment type mismatch");
     return new ExpTy(null, VOID);
   }
   
@@ -200,17 +203,46 @@ public class Semant {
     Types.NAME type;
     Entry entry;
     //REMEMBER: Entries are put into the venv
-    if(var instanceof Absyn.SimpleVar) {
-        entry = (Entry)env.venv.get(((Absyn.SimpleVar)var).name);
-        if(entry == null) {
-          error(e.pos, "undeclared variable: "+((Absyn.SimpleVar) var).name);
-          //return something...
-          return new ExpTy(null, VOID);
+    return transVar(var);
+  }
+  
+  //uh i guess time to add all these in
+  ExpTy transVar(Absyn.Var v) {
+    if(v instanceof Absyn.SimpleVar)
+      return transVar((Absyn.SimpleVar)v);
+    if(v instanceof Absyn.FieldVar)
+      return transVar((Absyn.FieldVar)v);
+    else throw new Error("Failed for "+v.getClass().getName());
+  }
+  
+  ExpTy transVar(Absyn.FieldVar v) {
+    //must be record type
+    Types.RECORD var = (Types.RECORD)transVar(v.var).ty.actual();
+    Symbol.Symbol compare = v.field;
+    //find record entry we need
+    Types.RECORD it = var;
+    while(it!=null) {
+        Symbol.Symbol compare2 = it.fieldName;
+        if(compare==compare2) {
+            //we found it folks
+            break;
         }
-        return new ExpTy(null, ((VarEntry)entry).ty);
-    } else { 
-        throw new Error("varExp "+var.getClass().getName());
+        it=it.tail;
     }
+    if(it==null) {
+      error(v.pos, "undeclared field: "+compare);
+      return new ExpTy(null, VOID);
+    }
+    return new ExpTy(null, it.fieldType.actual());
+  }
+  
+  ExpTy transVar(Absyn.SimpleVar v) {
+      Entry entry = (Entry)env.venv.get(v.name);
+      if(entry==null) {
+          error(v.pos, "undeclared variable: "+v.name);
+          return new ExpTy(null, VOID);
+      }
+      return new ExpTy(null, ((VarEntry)entry).ty);
   }
   
   ExpTy transExp(Absyn.IfExp e) {
@@ -319,7 +351,10 @@ public class Semant {
     }
     //traverse the function body
     ExpTy resultType = transExp(d.body);
-    //TODO: typecheck declared return type and actual return type
+    //I bet .actual() isn't required here...
+    if(!returnType.actual().coerceTo(resultType.ty))
+      //I guess the error marker should be at the body of the function? w/e
+      error(d.body.pos, "result type mismatch");
     //end scope
     env.venv.endScope();
     return null;
