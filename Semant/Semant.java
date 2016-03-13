@@ -393,8 +393,17 @@ public class Semant {
     d.entry = new FunEntry(formals, returnType);
     env.venv.put(d.name, d.entry);
     //go through the chain of function declarations here, put the names in the environment before parsing the body (for recursion)
-    if(d.next!=null)
-      transDec(d.next);
+    //but don't do it recursively becuase we have to check that the names don't match
+    Absyn.FunctionDec chain = d.next;
+    //o2 complexity, but who cares...
+    while(chain!=null) {
+       //check that the next functionDec isn't the same name as this one
+       if(chain.name==d.name)
+           error(chain.pos, "function redeclared");
+       chain = chain.next;
+    }
+    if(d.next != null)
+        transDec(d.next);
     //inside the body, create a new environment
     env.venv.beginScope();
     //add parameters to this scope
