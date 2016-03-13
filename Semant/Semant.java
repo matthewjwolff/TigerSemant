@@ -231,10 +231,14 @@ public class Semant {
   
   ExpTy transVar(Absyn.FieldVar v) {
     //must be record type
-    Types.RECORD var = (Types.RECORD)transVar(v.var).ty.actual();
+    Types.Type var = transVar(v.var).ty.actual();
+    if(!(var instanceof Types.RECORD)) {
+        error(v.var.pos, "record required");
+        return new ExpTy(null, VOID);
+    }
     Symbol.Symbol compare = v.field;
     //find record entry we need
-    Types.RECORD it = var;
+    Types.RECORD it = (Types.RECORD)var;
     while(it!=null) {
         Symbol.Symbol compare2 = it.fieldName;
         if(compare==compare2) {
