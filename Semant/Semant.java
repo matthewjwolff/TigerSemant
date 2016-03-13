@@ -145,8 +145,10 @@ public class Semant {
       paramList = paramList.tail;
       callList = callList.tail;
     }
-    if(callList!=null || paramList!=null)
-      error(e.pos, "argument number mismatch");
+    if(paramList!=null)
+      error(e.pos, "missing argument for "+paramList.fieldName);
+    if(callList!=null)
+      error(e.pos, "too many parameters");
     return new ExpTy(null, function.result);
   }
 
