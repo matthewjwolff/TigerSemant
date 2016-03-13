@@ -1,5 +1,4 @@
 Missing functionality:
-For loop iterator assigment check
 type cycles
 check for type duplication
  - test 38 and 47

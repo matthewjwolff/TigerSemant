@@ -111,8 +111,30 @@ public class Semant {
     env.venv.beginScope();
     //set up the variable in that scope
     transDec(e.var);
-    //traverse the body
+    //traverse the body, but can't do this recursively because we have to check for assignment to loop variable
     ExpTy body = transExp(e.body);
+    if (e.body instanceof Absyn.AssignExp) {
+        //check that it's not assigning to the loop variable
+        Absyn.AssignExp assign = (Absyn.AssignExp) e.body;
+        //I don't like that we assume it's a simpleVar...
+        if(e.var.name == ((Absyn.SimpleVar)assign.var).name)
+            error(assign.var.pos, "assignment to loop index");
+        
+    } else if (e.body instanceof Absyn.SeqExp) {
+        Absyn.ExpList list = ((Absyn.SeqExp)e.body).list;
+        while(list!=null) {
+            Absyn.Exp head = list.head;
+            if(head instanceof Absyn.AssignExp) {
+                Absyn.AssignExp assign = (Absyn.AssignExp) head;
+                //fix
+                 if(e.var.name == ((Absyn.SimpleVar)assign.var).name)
+                     error(assign.var.pos, "assignment to loop index");
+            }
+            list = list.tail;
+        }
+    } else { 
+        
+    }
     //result must be void
     if(!body.ty.coerceTo(VOID))
       error(e.body.pos, "body must be void type");
