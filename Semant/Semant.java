@@ -461,7 +461,8 @@ public class Semant {
           error(d.pos, "unknown type: "+d.typ.name);
           return null;
         }
-      if(!varType.actual().coerceTo(init.ty)) {
+      //NIL is allowed
+      if(!varType.actual().coerceTo(init.ty) && init.ty != NIL) {
         error(d.pos, "assignment type mismatch");
       }
     } else {
