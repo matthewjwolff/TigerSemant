@@ -193,7 +193,13 @@ public class Semant {
     Types.NAME type = (Types.NAME)env.tenv.get(e.typ);
     ExpTy size = transExp(e.size);
     ExpTy init = transExp(e.init);
-
+    if(!(type.actual() instanceof Types.ARRAY))
+        error(e.pos, "not an array");
+    else {
+        Types.ARRAY array = (Types.ARRAY)type.actual();
+        if(!array.element.coerceTo(init.ty))
+            error(e.init.pos, "element type mismatch");
+    }
     return new ExpTy(null, type);
   }
 
@@ -442,13 +448,19 @@ public class Semant {
 
   Exp transDec(Absyn.VarDec d) {
     ExpTy init = transExp(d.init);
-    Types.NAME varType = (Types.NAME)env.tenv.get(d.typ.name);
-    if(varType==null) {
-      error(d.pos, "unknown type: "+d.typ.name);
-      return null;
-    }
-    if(!varType.actual().coerceTo(init.ty)) {
-      error(d.pos, "assignment type mismatch");
+    Types.Type varType = VOID;
+    if(d.typ!=null) {
+        varType = (Types.NAME)env.tenv.get(d.typ.name);
+        if(varType==null) {
+          error(d.pos, "unknown type: "+d.typ.name);
+          return null;
+        }
+      if(!varType.actual().coerceTo(init.ty)) {
+        error(d.pos, "assignment type mismatch");
+      }
+    } else {
+      //it didn't declare a type, better just grab the init type...
+      varType = init.ty;
     }
     d.entry = new VarEntry(varType);
     env.venv.put(d.name, d.entry);
