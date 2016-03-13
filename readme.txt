@@ -1,6 +1,2 @@
-Missing functionality:
-type cycles
-check for type duplication
- - test 38 and 47
-function cycles & function duplication
- - test 39 and 48
+Project 3 for Kristen Barrett and Matthew Wolff
+We don't know of any features that are missing.
