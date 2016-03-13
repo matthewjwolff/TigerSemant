@@ -445,21 +445,16 @@ public class Semant {
   }
 
   Exp transDec(Absyn.VarDec d) {
-    // NOTE: THIS IMPLEMENTATION IS INCOMPLETE
-    // It is here to show you the general form of the transDec methods
     ExpTy init = transExp(d.init);
-    Type type;
-    if (d.typ == null) {
-      //Unknown type? i.e. recursive type?
-      type = init.ty;
-    } else {
-      type = init.ty;
-      /**
-      type = VOID;
-      throw new Error("unimplemented declaration: "+d.typ.getClass().getName());
-      */
+    Types.NAME varType = (Types.NAME)env.tenv.get(d.typ.name);
+    if(varType==null) {
+      error(d.pos, "unknown type: "+d.typ.name);
+      return null;
     }
-    d.entry = new VarEntry(type);
+    if(!varType.actual().coerceTo(init.ty)) {
+      error(d.pos, "assignment Type mismatch");
+    }
+    d.entry = new VarEntry(varType);
     env.venv.put(d.name, d.entry);
     return null;
   }
