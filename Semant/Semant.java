@@ -121,7 +121,7 @@ public class Semant {
       return null;
     }
     ExpTy body = transExp(e.body);
-    if(!test.ty.coerceTo(VOID))
+    if(!body.ty.coerceTo(VOID))
       error(e.body.pos, "result type mismatch");
     return new ExpTy(null, VOID);
   }
