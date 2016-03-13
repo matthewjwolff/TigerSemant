@@ -428,6 +428,13 @@ public class Semant {
     //first, define the name in the environment (handles recursive types)
     env.tenv.put(d.name, name);
     d.entry = name;
+    //check that this type isn't duplicated
+    Absyn.TypeDec chain = d.next;
+    while(chain!=null) {
+        if(chain.name == d.name)
+            error(chain.pos, "type redeclared");
+        chain = chain.next;
+    }
     //Go through the names of the types in the typedec chain before processing the types (to handle for recursive types)
     if(d.next != null)
       transDec(d.next);
