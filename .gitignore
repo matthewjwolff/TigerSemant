@@ -1,5 +1,6 @@
-Ignore class files in the Semant directory
+Ignore class files in the Semant directory and Absyn directory
 Semant/*.class
+Absyn/*.class
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/

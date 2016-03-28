@@ -1,4 +1,4 @@
-Semant/Main.class : Semant/Main.java
+Semant/Semant.class : Semant/Semant.java
 	javac -g */*.java
 
 clean :
